@@ -13,7 +13,7 @@
 - define `=`
 - apply `f(x)`
 
-## principle
+## Principle
 
 We learn from
 
@@ -21,6 +21,6 @@ We learn from
 - C or Haskell
 - Our Intuitive
 
-## cond can be new line
+## `cond` can be new line
 
-## let can be new line
+## `let` can be new line
