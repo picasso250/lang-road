@@ -10,6 +10,8 @@
 - let can be new line
 - lambda `\x.x+1`
 - list `[ 1 2 3 ]`
+- define `=`
+- apply `f(x)`
 
 ## principle
 
