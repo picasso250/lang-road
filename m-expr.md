@@ -21,6 +21,10 @@ We learn from
 - C or Haskell
 - Our Intuitive
 
+And:
+
+- do not have static types yet
+
 ## `cond` can be new line
 
 ```
