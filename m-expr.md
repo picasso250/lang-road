@@ -1,5 +1,7 @@
 # M-expr
 
+We alias S-expr as this M-expr
+
 - quote `'`
 - atom `A?(x)`
 - null `Nil?(x)`
