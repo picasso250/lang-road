@@ -23,4 +23,17 @@ We learn from
 
 ## `cond` can be new line
 
+```
+cond?
+  a? => b;
+  c? => d.
+```
+
 ## `let` can be new line
+
+```
+let
+  a = 3;
+  b = 4;
+  do(a,b).
+```
