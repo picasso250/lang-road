@@ -30,6 +30,13 @@ every expr has a value.
 4. def like `a=4`
 5. lambda like `\a.a+1`
 
+### type of data
+
+1. int
+2. float
+3. byte
+4. string
+
 ### function
 
 there are 2 kinds of functions
