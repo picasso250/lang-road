@@ -39,7 +39,7 @@ there are 2 kinds of functions
 
 #### build in functions
 
-3. quote
+1. quote
 4. build-atom
 6. build-pair
 7. is-atom
