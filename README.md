@@ -1,7 +1,9 @@
 # lang-road
 
-from the simple lisp
+c without type declare
 
-to M expression
+   func main(argv) {
+       printf("%s\n", "hello, world");
+       return 0;
+   }
 
-to GC
