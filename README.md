@@ -2,8 +2,8 @@
 
 c without type declare
 
-   func main(argv) {
-       printf("%s\n", "hello, world");
-       return 0;
-   }
+    func main(argv) {
+        printf("%s\n", "hello, world");
+        return 0;
+    }
 
