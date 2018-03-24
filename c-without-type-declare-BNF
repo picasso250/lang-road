@@ -1,6 +1,9 @@
 <translation-unit> ::= {<function-definition>}*
 
-<function-definition> ::= func ( {<identifier> {, <identifier>}*}? ) { {<statement>}* }
+<function-definition> ::= func ( <parameter-list>? ) { {<statement>}* }
+
+<parameter-list> ::= <identifier>
+                   | <parameter-list> , <identifier>
 
 <compound-statement> ::= { {<statement>}* }
 
