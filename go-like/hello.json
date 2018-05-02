@@ -1,0 +1,22 @@
+{
+    "_package": "main",
+    "_stmt_list": [
+        {
+            "type": "stmt(import)",
+            "_import._name_list": [
+                "fmt"
+            ]
+        },
+        {
+            "type": "stmt(func_def)",
+            "_func_def": {
+                "_reciever_decl": null,
+                "_name": "main",
+                "_params": {
+                    "_has_variadic": false,
+                    "_name_list": 
+                }
+            }
+        }
+    ]
+}
