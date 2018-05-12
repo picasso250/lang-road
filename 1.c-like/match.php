@@ -110,6 +110,10 @@ class OptionalExpr { // a?
 class MatchExpr {
     function __construct($ch) { $this->ch= ch; }
 }
+class _Match_literal {
+    function __construct($word) { $this->word = $word; }
+}
+class _Match
 
 function MatchImplApply ($expr, $target, $i, $cont) {
   switch (true) {

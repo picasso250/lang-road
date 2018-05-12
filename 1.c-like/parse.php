@@ -7,11 +7,42 @@
  * every expr (short for expression) is like `a op b` or `op a`
  */
 
-require "lex_line.php";
+require "lex.php";
 
 // todo
 // + test lex
 // + big plan
+// - BNF
+
+/**
+ * BNF
+ * file = statement_list
+ * statement_list = statment sep by lf
+ * statment = expr
+ *          | 'import' string
+ *          | func_define
+ *          | type_decl
+ * expr = (expr)
+ *      | operator primary_expr
+ *      | primary_expr operator primary_expr
+ *      | if (expr) { statement_list } else { statement_list }
+ *      | for (expr;expr;expr) { statement_list }
+ *      | 'continue'
+ *      | 'break'
+ *      | 'return'
+ * primary_expr = word
+ *              | number
+ *              | word.word
+ *              | $word
+ *              | word(expr?)
+ *              | $word(expr?)
+ * func_define = 'func' 'op'? word(param_list) { statement_list }
+ * param_list = &?word =expr?
+ * type_decl = word op? :: type_decl_expr
+ * type_decl_expr = word
+ *                | (param_type_list)->type_decl_expr
+ * param_type_list = type_decl_expr sep by ,
+ */
 
 if (!isset($argv[1])) {
     echo "Usage: $argv[0] <file>\n";

@@ -1,6 +1,6 @@
 C like language, and have GC
 
-    import stdio  // import borrowed from go-lang
+    import "stdio"  // import borrowed from go-lang
     func main() { // func is a key word for function
         stdio.printf("hello world!") // no ; (semicolon)
         0 // last statement is return value
