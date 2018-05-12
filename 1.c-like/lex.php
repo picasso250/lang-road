@@ -8,20 +8,6 @@ class LexNode {
     }
 }
 
-// https://en.wikipedia.org/wiki/Escape_sequences_in_C
-$escape_map = [
-    "a"=>	0x07,//	Alert (Beep, Bell) (added in C89)[1]
-    "b"=>	0x08,//	Backspace
-    "f"=>	0x0C,//	Formfeed
-    "n"=>	0x0A,//	Newline (Line Feed); see notes below
-    "r"=>	0x0D,//	Carriage Return
-    "t"=>	0x09,//	Horizontal Tab
-    "v"=>	0x0B,//	Vertical Tab
-    "\\"=>	0x5C,//	Backslash
-    "'"=>	0x27,//	Single quotation mark
-    "\""=>	0x22,//	Double quotation mark
-];
-
 // token types are
 //     word
 //     string
@@ -33,7 +19,16 @@ $escape_map = [
 //     comment
 // currently this function parses one line, but it can easily change to parse a whole file
 function lex($code) {
-    global $escape_map;
+    // https://en.wikipedia.org/wiki/Escape_sequences_in_C
+    $escape_map = [
+        "n" =>	"\n",//	Newline (Line Feed); see notes below
+        "r" =>	"\r",//	Carriage Return
+        "t" =>	"\t",//	Horizontal Tab
+        "v" =>	"\v",//	Vertical Tab
+        "\\" =>	"\\",//	Backslash
+        "'" =>	"'",//	Single quotation mark
+        "\"" =>	'"',//	Double quotation mark
+    ];
     $operator_reg = '/^[-`~!@#$%^&*+=\\\\|\'\;:\'"<>,.?\/]$/'; // no _[]{}()
 
     $n = strlen($code);
@@ -71,10 +66,10 @@ function lex($code) {
         } else if ($state=='string') {
             if ($c==="\n") $line++;
             // \t\b\v and so on
-            if ($c == '\\') {
+            if ($c == "\\") {
                 $i++;
-                $esc=$line[$i]; // lack of error proc
-                $word .= chr($escape_map[$esc]); // lack of error proc
+                $esc=$code[$i]; // lack of error proc
+                $word .= ($escape_map[$esc]); // lack of error proc
             } else if ($c == '"') {
                 $ret[] = new LexNode('string', $word, $line);
                 $state='';
