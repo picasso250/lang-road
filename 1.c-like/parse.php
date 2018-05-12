@@ -1,5 +1,18 @@
 <?php
 
+/**
+ * this file is the parser of loong-language
+ * loong-language is short to `loo`
+ * loo is parsed line by line
+ * every expr (short for expression) is like `a op b` or `op a`
+ */
+
+require "lex_line.php";
+
+// todo
+// + test lex
+// + big plan
+
 if (!isset($argv[1])) {
     echo "Usage: $argv[0] <file>\n";
     exit(1);
@@ -48,28 +61,6 @@ foreach(file($file) as $_line_no => $line_raw) {
     }
 }
 
-function lex_line($line) {
-    $a = preg_split('/\b/', $line);
-    $ret = [];
-    $word = '';
-    // compose op
-    foreach ($a as $key => $value) {
-        if (trim($value) === '') {
-            continue;
-        } else if (preg_match('/^[a-zA-Z0-9_]+$/', $value)) {
-            if ($word !== '') {
-                $ret[] = $word;
-                $word = '';
-            }
-            $ret[] = $value;
-        } else {
-            $word .= $value;
-            if ($word == '//') break; // comment
-        }
-    }
-    return $ret;
-}
-
 function close_node() {
     global $state;
     global $line_no;
@@ -83,23 +74,15 @@ function close_node() {
     }
 }
 
-function match_func($tokens) {
+function _match_func($tokens) {
     global $line_no;
     global $cur_node;
     $node = new AST_Node('func', $line_no, $cur_node);
-    if (match("func 'f()", $tokens, $m)) {
-        $node->name = $m['f'];
-        $node->params = [];
-        $node->reciever = null;
-    } else if (match("func ('r) 'f()", $tokens, $m)) {
-        $node->name = $m['f'];
-        $node->params = [];
-        $node->reciever = $m['r'];
-    } else if (match("func 'f(',p+)", $tokens, $m)) {
+    if (match("func 'f(',p:param_decl*){", $tokens, $m)) {
         $node->name = $m['f'];
         $node->params = $m['p'];
         $node->reciever = null;
-    } else if (match("func ('r) 'f(',p+)", $tokens, $m)) {
+    } else if (match("func ('r) 'f(',p:param_decl)", $tokens, $m)) {
         $node->name = $m['f'];
         $node->params = $m['p'];
         $node->reciever = $m['r'];
