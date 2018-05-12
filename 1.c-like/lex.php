@@ -1,5 +1,13 @@
 <?php
 
+class LexNode {
+    function __construct($type, $word, $line) {
+        $this->type = $type;
+        $this->word = $word;
+        $this->line = $line;
+    }
+}
+
 // https://en.wikipedia.org/wiki/Escape_sequences_in_C
 $escape_map = [
     "a"=>	0x07,//	Alert (Beep, Bell) (added in C89)[1]
@@ -21,21 +29,23 @@ $escape_map = [
 //     operator
 //         ()[]{}
 //         other
+//     lf:  new line
 //     comment
 // currently this function parses one line, but it can easily change to parse a whole file
-function lex_line($line) {
+function lex($code) {
     global $escape_map;
     $operator_reg = '/^[-`~!@#$%^&*+=\\\\|\'\;:\'"<>,.?\/]$/'; // no _[]{}()
 
-    $n = strlen($line);
-    $state = ""; // in word/string/number/operator/comment
+    $n = strlen($code);
+    $state = ""; // in word/string/number/operator/lf/comment
     $ret = [];
     $i = 0;
-    while ($i<$n){
-        $c = $line[$i];
+    $line = 1;
+    while ($i<$n) {
+        $c = $code[$i];
         if ($state=='') {
             if (preg_match('/^\s$/i', $c)) {
-                // do nothing
+                if ($c==="\n") $line++;
             } elseif (preg_match('/^[a-z_]$/i', $c)) {
                 $state='word';
                 $word = $c;
@@ -46,7 +56,7 @@ function lex_line($line) {
                 $state='number';
                 $word=$c;
             } else if (preg_match('/^[\[\](){}]$/', $c)) {
-                $ret[] = ["operator",$c];
+                $ret[] = new LexNode("operator",$c, $line);
             } else if (preg_match($operator_reg, $c)) {
                 $state = 'operator';
                 $word = $c;
@@ -55,17 +65,18 @@ function lex_line($line) {
             if (preg_match('/^[\w_]$/', $c)) {
                 $word.=$c;
             } else {
-                $ret[]=['word',$word];
+                $ret[]=new LexNode('word',$word, $line);
                 $i--; $state='';
             }
         } else if ($state=='string') {
+            if ($c==="\n") $line++;
             // \t\b\v and so on
             if ($c == '\\') {
                 $i++;
                 $esc=$line[$i]; // lack of error proc
                 $word .= chr($escape_map[$esc]); // lack of error proc
             } else if ($c == '"') {
-                $ret[] = ['string', $word];
+                $ret[] = new LexNode('string', $word, $line);
                 $state='';
             } else {
                 $word .= $c;
@@ -74,7 +85,7 @@ function lex_line($line) {
             if (preg_match('/^[\w.]$/i', $c)) {
                 $word.=$c;
             } else {
-                $ret[] = ['number', $word];
+                $ret[] = new LexNode('number', $word, $line);
                 $i--; $state='';
             }
         } else if ($state=='operator') {
@@ -85,16 +96,22 @@ function lex_line($line) {
                     $word = '';
                 }
             } else {
-                $ret[] = ['operator', $word];
+                $ret[] = new LexNode('operator', $word, $line);
                 $i--; $state = '';
             }
         } else if ($state=='comment') {
-            $word.=$c;
+            if ($c=="\n") {
+                $line++;
+                $state='';
+                $ret[] = new LexNode('comment', $word, $line);
+            } else {
+                $word.=$c;
+            }
         } // lack of error proc
         $i++;
     }
     if ($word !== '' && $state)
-        $ret[] = [$state, $word];
+        $ret[] = new LexNode($state, $word, $line);
 
     return $ret;
 }
