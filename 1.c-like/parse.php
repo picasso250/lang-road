@@ -23,26 +23,25 @@ require "lex.php";
  *          | 'import' string
  *          | func_define
  *          | type_decl
- * expr = (expr)
+ * expr = '(' expr ')'
  *      | operator primary_expr
  *      | primary_expr operator primary_expr
- *      | if (expr) { statement_list } else { statement_list }?
- *      | for (expr;expr;expr) { statement_list }
+ *      | 'if' '(' expr ')' '{' statement_list '}' ('else' '{' statement_list '}')?
+ *      | 'for' '(' expr? ';' expr? ';' expr? ')' '{' statement_list '}'
  *      | 'continue'
  *      | 'break'
  *      | 'return'
- * primary_expr = word
+ * primary_expr = '$'? word
  *              | number
- *              | word.word
- *              | $word
- *              | word(expr?)
- *              | $word(expr?)
- * func_define = 'func' 'op'? word(param_list) { statement_list }
- * param_list = &?word =expr?
- * type_decl = word op? :: type_decl_expr
+ *              | word '.' word
+ *              | '$'? word '(' (expr sep by ',')? ')'
+ *              | word '[' expr ']'
+ * func_define = 'func' ('op' operator | word) '(' param_list? ')' '{' statement_list '}'
+ * param_list = ('&'? word ('=' expr)?) sep by ','
+ * type_decl = word|op '::' type_decl_expr
  * type_decl_expr = word
- *                | (param_type_list)->type_decl_expr
- * param_type_list = type_decl_expr sep by ,
+ *                | '(' param_type_list ')' '->' type_decl_expr
+ * param_type_list = type_decl_expr sep by ','
  */
 
 if (!isset($argv[1])) {

@@ -1,4 +1,7 @@
 <?php
+
+namespace match;
+
 /**
  * this->is a helper language for parse
  * 'f          capture a node named f
@@ -94,16 +97,130 @@ function _clear_lf_comment_lex($list) {
 }
 // bnf to expr
 function _file_expr() { return new ConcatExpr(_statement_list_expr(), new MatchExpr('lf')); }
-function _statement_list_expr() { return _sep_expr(new MatchExpr('lf'), _statement_expr()); }
+function _statement_list_expr() {
+    return _concat_expr_list([
+        new OptionalExpr(_type('lf')),
+        _sep_expr(new MatchExpr('lf'), _statement_expr()),
+        new OptionalExpr(_type('lf')),
+    ]);
+}
 function _statement_expr() {
-    return _alter_expr_list([_expr_expr(),
+    return _alter_expr_list([
+        function(){ return _expr_expr(); },
         new ConcatExpr(new MatchExpr(null,'import'), new MatchExpr('string')),
         _func_define_expr(),
         _type_decl_expr(),]);
 }
+function _expr_expr() {
+    return _alter_expr_list([
+        _concat_expr_list([_lit('('), function() {return _expr_expr(); }, _lit(')')]),
+        new ConcatExpr(_operator_expr(), _primary_expr_expr()),
+        _if_expr(),
+        _for_expr(),
+        _lit('continue'),
+        _lit('break'),
+        _lit('return'),
+    ]);
+}
+function _if_expr() {
+    return new ConcatExpr(
+        _concat_expr_list([
+            _lit('if'), _lit('('),
+            function () { return _expr_expr(); },
+            _lit(')'), _lit('{'),
+            _statement_list_expr(),
+            _lit('}'),
+        ]),
+        new OptionalExpr(_concat_expr_list([
+            _lit('else'), _lit('{'),
+            _statement_list_expr(),
+            _lit('}'),
+        ]))
+    );
+}
+function _for_expr() {
+    return _concat_expr_list([
+        _lit('for'), _lit('('),
+        new OptionalExpr(function (){ return _expr_expr(); }), _lit(';'),
+        new OptionalExpr(function (){ return _expr_expr(); }), _lit(';'),
+        new OptionalExpr(function (){ return _expr_expr(); }), 
+        _lit('{'), _statement_list_expr(), _lit('}'),
+    ]);
+}
+function _primary_expr_expr() {
+    return _alter_expr_list([
+        new ConcatExpr(new OptionalExpr(_lit('$')), _type('word')),
+        _type('number'),
+        _concat_expr_list([_type('word'),_lit('.'),_type('word')]),
+        _concat_expr_list([
+            new OptionalExpr(_lit('$')),
+            _type('word'), _lit('('),
+            new OptionalExpr(_sep_expr(_lit(','),function(){ return _expr_expr(); })),
+            _lit(')')
+        ]),
+        _concat_expr_list([_type('word'),_lit('['), _lazy_expr(), _lit(']')),
+    ]);
+}
+function _func_define_expr() {
+    return _concat_expr_list([
+        _lit('func'),
+        new AltExpr(
+            _type('word'),
+            new ConcatExpr(
+                new OptionalExpr(_lit('op')),
+                _type('operator')
+            )
+        ),
+        _lit('('), _param_list_expr(), _lit(')'),
+        _lit('{'), _statement_list_expr(), _lit('}'),
+    ]);
+}
+function _param_list_expr() {
+    $param = _concat_expr_list([
+        new OptionalExpr(_lit('&')),
+        _type('word'),
+        new OptionalExpr(new ConcatExpr(_lit('='), _lazy_expr())),
+    ]);
+    return _sep_expr(_lit(','), $param);
+}
+function _type_decl_expr() {
+    return _concat_expr_list([
+        new AltExpr(_type('word'), _type('operator')),
+        _lit('::'),
+        _type_decl_expr_expr(),
+    ]);
+}
+function _type_decl_expr_expr() {
+    return _alter_expr_list([
+        _type('word'),
+        _concat_expr_list([
+            _lit('('), _param_type_list_expr(), _lit(')'), _lit('->'),
+            function() { return _type_decl_expr_expr(); },
+        ]),
+    ]);
+}
+function _param_type_list_expr() {
+    return _sep_expr(_lit(','), function() { return _type_decl_expr_expr(); });
+}
 
+function _lazy_expr() {
+    return function() { return _expr_expr(); }
+}
+function _lit($lit) {
+    return new MatchExpr(null, $lit);
+}
+function _type($type) {
+    return new MatchExpr($type, null);
+}
+function _concat_expr_list($list) {
+    if (count($list) <= 1) return $list[0];
+    $a = new ConcatExpr($list[0],$list[1]);
+    for ($i = 2; $i<count($list);$i++) {
+        $a = new ConcatExpr($a, $list[$i]);
+    }
+}
 function _alter_expr_list($list) {
-    if (count($list) < 1) return $list[0];
+    if (count($list) <= 1) return $list[0];
     $a = new AltExpr($list[0],$list[1]);
     for($i = 2;$i<count($list);$i++) {
         $a = new AltExpr($a,$list[$i]);
@@ -127,10 +244,10 @@ class AltExpr { // a|b
     }
 }
 class RepeatExpr { // a*
-    function __construct($Subexpr-> {$this->SubExpr= $SubExpr;}
+    function __construct($Subexpr) {$this->SubExpr= $SubExpr;}
 }
 class OptionalExpr { // a?
-    function __construct($Subexpr-> {$this->SubExpr= $Subexpr;}
+    function __construct($Subexpr) {$this->SubExpr= $Subexpr;}
 }
 class MatchExpr {
     function __construct($type, $word=null) { $this->type = $type; $this->word = $word }
@@ -140,10 +257,14 @@ class MatchExpr {
         if ($this->word === null)
             return $this->type == $lex_node->type;
     }
-
 }
 
 function MatchImplApply ($expr, $target, $i, $cont) {
+    // for lazy value
+    if (is_callable($expr))
+        return MatchImplApply($expr(), $target, $i, $cont);
+
+    // for normal
   switch (true) {
   case $expr instanceof ConcatExpr:
     return MatchImplApply($expr->Left, $target, $i, function($rest,$ri)use($expr,$cont) {
