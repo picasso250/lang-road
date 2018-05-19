@@ -78,16 +78,41 @@ function _build_match_pattern($pattern) {
     return $lst;
 }
 
-class PatternNode {
-    public $Left;
-    public $Right;
-    public $Subexpr->
+function _clear_lf_comment_lex($list) {
+    $ret = [];
+    $n = count($list);
+    for($i=0;$i<$n;$i++) {
+        $node = $list[$i];
+        if ($node->type == 'lf' && $i-1>=0 && $list[$i-1]->type=='lf') {
+            // do nothing
+        } else if ($node->type == 'comment') {
+            // do nothing
+        } else {
+            $ret[] = $node;
+        }
+    }
+}
+// bnf to expr
+function _file_expr() { return new ConcatExpr(_statement_list_expr(), new MatchExpr('lf')); }
+function _statement_list_expr() { return _sep_expr(new MatchExpr('lf'), _statement_expr()); }
+function _statement_expr() {
+    return _alter_expr_list([_expr_expr(),
+        new ConcatExpr(new MatchExpr(null,'import'), new MatchExpr('string')),
+        _func_define_expr(),
+        _type_decl_expr(),]);
+}
 
-    public $type;
-    public $name;
-    public $sep = null;
-    public $match_type = null;
-    public $can_be_empty = false;
+function _alter_expr_list($list) {
+    if (count($list) < 1) return $list[0];
+    $a = new AltExpr($list[0],$list[1]);
+    for($i = 2;$i<count($list);$i++) {
+        $a = new AltExpr($a,$list[$i]);
+    }
+    return $a;
+}
+function _sep_expr($sep, $sub_expr) { // a,a,a
+    $sep_ = new ConcatExpr($sep, $sub_expr);
+    return new ConcatExpr($sub_expr, new OptionalExpr(new RepeatExpr($sep_)));
 }
 
 // from JS version: https://gist.github.com/picasso250/0efc287080664f43eb93
@@ -108,12 +133,15 @@ class OptionalExpr { // a?
     function __construct($Subexpr-> {$this->SubExpr= $Subexpr;}
 }
 class MatchExpr {
-    function __construct($ch) { $this->ch= ch; }
+    function __construct($type, $word=null) { $this->type = $type; $this->word = $word }
+    function match($lex_node) {
+        if ($this->type === null)
+            return $this->word == $lex_node->word;
+        if ($this->word === null)
+            return $this->type == $lex_node->type;
+    }
+
 }
-class _Match_literal {
-    function __construct($word) { $this->word = $word; }
-}
-class _Match
 
 function MatchImplApply ($expr, $target, $i, $cont) {
   switch (true) {
@@ -130,33 +158,17 @@ function MatchImplApply ($expr, $target, $i, $cont) {
   case $expr instanceof OptionalExpr:
     return MatchImplApply($expr->Subexpr, $target, $i, $cont) || $cont($target, $i)
   case $expr instanceof MatchExpr:
-    return target[i] !== undefined && target[i] == expr->ch && cont(target, i+1) // end of string, match a char
+    return $i < count($target) && $expr->match($target) && $cont($target, $i+1) // end of string, match a char
   default:
     throw "no expression type"
   }
 }
 
-function RegexMatch (Regexpr->target) { // all match
-    return MatchImplApply(Regexpr, target,0, (rest,i) => rest[i] === undefined)
+function RegexMatch ($RegExpr, $target) { // all match
+    return MatchImplApply($Regexpr, $target,0, function($rest,$i) { return !isset($rest[$i]); });
 }
-function RegexSearch (Regexpr->target,i) { // partial match from begining
-    return MatchImplApply(Regexpr, target,i, (rest,i) => true) ||
-    (target[i] !== undefined && RegexSearch(Regexpr-> target, i+1))
-}
+//function RegexSearch (Regexpr->target,i) { // partial match from begining
+//    return MatchImplApply(Regexpr, target,i, (rest,i) => true) ||
+//    (target[i] !== undefined && RegexSearch(Regexpr-> target, i+1))
+//}
 
-console.assert(RegexMatch(new Concatexpr->new Matchexpr->'a'), new Matchexpr->'b')), "ab"));
-console.assert(RegexMatch(new Altexpr->new Matchexpr->'a'), new Matchexpr->'b')), "a"));
-console.assert(RegexMatch(new Altexpr->new Matchexpr->'a'), new Matchexpr->'b')), "b"));
-console.assert(RegexMatch(new Repeatexpr->new Matchexpr->'a')), "aaaaa"));
-console.assert(RegexMatch(new Concatexpr->new Repeatexpr->new Matchexpr->'a')), new Matchexpr->'b')),
-  "aaaaab"));
-console.assert(RegexMatch(new Concatexpr->new Repeatexpr->new Matchexpr->'a')), new Matchexpr->'b')),
-  "b"));
-console.assert(RegexSearch(new Concatexpr->new Repeatexpr->new Matchexpr->'a')), new Matchexpr->'b')),
-      "aaaaabb", 0));
-console.assert(RegexMatch(new Optionalexpr->new Matchexpr->'a')), "a"));
-console.assert(RegexMatch(new Optionalexpr->new Matchexpr->'a')), ""));
-console.assert(RegexMatch(new Optionalexpr->new Concatexpr->new Matchexpr->'a'), new Matchexpr->'b'))),
-    "ab"));
-console.assert(RegexMatch(new Optionalexpr->new Concatexpr->new Matchexpr->'a'), new Matchexpr->'b'))),
-    ""));

@@ -12,7 +12,8 @@ require "lex.php";
 // todo
 // + test lex
 // + big plan
-// - BNF
+// + BNF
+// - BNF to expr
 
 /**
  * BNF
@@ -25,7 +26,7 @@ require "lex.php";
  * expr = (expr)
  *      | operator primary_expr
  *      | primary_expr operator primary_expr
- *      | if (expr) { statement_list } else { statement_list }
+ *      | if (expr) { statement_list } else { statement_list }?
  *      | for (expr;expr;expr) { statement_list }
  *      | 'continue'
  *      | 'break'
@@ -59,7 +60,6 @@ $state = "";
 $line_no = 0;
 $cur_node = null; // null also means root here
 $stmts = [];
-$if_mode = "then";
 foreach(file($file) as $_line_no => $line_raw) {
     $line_no = $_line_no+1;
     $line = trim($line_raw);
