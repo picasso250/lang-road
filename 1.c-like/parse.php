@@ -23,19 +23,18 @@ require "lex.php";
  *          | 'import' string
  *          | func_define
  *          | type_decl
- * expr = '(' expr ')'
- *      | operator primary_expr
- *      | primary_expr operator primary_expr
+ *          | 'for' '(' expr? ';' expr? ';' expr? ')' '{' statement_list '}'
+ * expr = operator pri_expr
+ *      | pri_expr (operator pri_expr)+
  *      | 'if' '(' expr ')' '{' statement_list '}' ('else' '{' statement_list '}')?
- *      | 'for' '(' expr? ';' expr? ';' expr? ')' '{' statement_list '}'
  *      | 'continue'
  *      | 'break'
  *      | 'return'
- * primary_expr = '$'? word
- *              | number
- *              | word '.' word
- *              | '$'? word '(' (expr sep by ',')? ')'
- *              | word '[' expr ']'
+ * pri_expr = '(' expr ')'
+ *          | word
+ *          | number
+ *          | pri_expr '(' (expr sep by ',')? ')'
+ *          | pri_expr '[' expr ']'
  * func_define = 'func' ('op' operator | word) '(' param_list? ')' '{' statement_list '}'
  * param_list = ('&'? word ('=' expr)?) sep by ','
  * type_decl = word|op '::' type_decl_expr
